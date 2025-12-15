@@ -11,6 +11,7 @@ import 'my_vocabulary_screen.dart';
 import 'flashcard_screen.dart';
 import 'german_writing_assistant_screen.dart';
 import 'progress_dashboard_screen.dart';
+import 'mari_ai_chat_screen.dart';
 import '../models/document_analysis_model.dart';
 
 /// Main home screen with bottom navigation and animated upload button
@@ -298,38 +299,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentBright.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.accentBright.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: AppColors.accentBright,
-                            size: 24,
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MariAIChatScreen(),
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Yapay zeka asistanın hazır!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.accentBright,
-                                fontWeight: FontWeight.normal,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentBright.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.accentBright.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              color: AppColors.accentBright,
+                              size: 24,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Yapay zeka asistanın hazır!',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.accentBright,
+                                  fontWeight: FontWeight.normal,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              color: AppColors.accentBright,
+                              size: 16,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
