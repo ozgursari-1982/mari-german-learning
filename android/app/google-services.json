@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1058616115670",
+    "project_id": "mari-learning-app",
+    "storage_bucket": "mari-learning-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058616115670:android:2d2d1047302f438f8e2477",
+        "android_client_info": {
+          "package_name": "com.mari.learning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCceDP60m9dyCHXhm0MHDrqTjG_wzUoMM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
