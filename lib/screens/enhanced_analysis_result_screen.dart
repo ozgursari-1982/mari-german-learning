@@ -473,10 +473,6 @@ class _EnhancedAnalysisResultScreenState
               const SizedBox(height: 16),
             ],
 
-            // Standard Analysis Display
-            _buildStandardAnalysisCard(),
-            const SizedBox(height: 16),
-
             // Create Quiz Button
             SizedBox(
               width: double.infinity,

@@ -164,13 +164,6 @@ class ThemeDetailScreen extends StatelessWidget {
                       children: [
                         _buildContentTypeItem(
                           context,
-                          DocumentType.theory,
-                          'Konu Anlatımı',
-                          Icons.menu_book,
-                          topic,
-                        ),
-                        _buildContentTypeItem(
-                          context,
                           DocumentType.vocabulary,
                           'Kelime Listesi (Wortschatz)',
                           Icons.list_alt,

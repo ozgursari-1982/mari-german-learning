@@ -1,0 +1,13 @@
+# Git Bash Custom Prompt - Kısa ve öz
+# Sadece klasör adı ve git branch gösterir
+
+# Renkler
+GREEN='\[\033[01;32m\]'
+BLUE='\[\033[01;34m\]'
+RESET='\[\033[00m\]'
+
+# Kısa prompt: klasör_adı (branch) $
+export PS1="${GREEN}\W${RESET}${BLUE}\$(__git_ps1 ' (%s)')${RESET}\$ "
+
+# Alternatif (daha da kısa - sadece klasör):
+# export PS1="${GREEN}\W${RESET}\$ "

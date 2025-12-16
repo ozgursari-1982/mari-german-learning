@@ -533,13 +533,6 @@ class _UploadScreenState extends State<UploadScreen> {
             dropdownColor: AppColors.backgroundCard,
             items: [
               DropdownMenuItem(
-                value: DocumentType.theory,
-                child: Text(
-                  'Konu Anlatımı',
-                  style: TextStyle(color: AppColors.textPrimary),
-                ),
-              ),
-              DropdownMenuItem(
                 value: DocumentType.vocabulary,
                 child: Text(
                   'Kelime Listesi',
