@@ -173,11 +173,13 @@ class ContentSection {
   final String title;
   final String type; // grammar, exercise, vocabulary, text
   final String description;
+  final String sectionText; // FULL TEXT of this section
 
   ContentSection({
     required this.title,
     required this.type,
     required this.description,
+    this.sectionText = '', // Optional
   });
 
   factory ContentSection.fromJson(Map<String, dynamic> json) {
@@ -185,11 +187,17 @@ class ContentSection {
       title: json['title'] ?? '',
       type: json['type'] ?? '',
       description: json['description'] ?? '',
+      sectionText: json['sectionText'] ?? json['text'] ?? '', // Support both
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'title': title, 'type': type, 'description': description};
+    return {
+      'title': title,
+      'type': type,
+      'description': description,
+      'sectionText': sectionText,
+    };
   }
 }
 

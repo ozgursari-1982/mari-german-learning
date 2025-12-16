@@ -184,11 +184,13 @@ class _EnhancedAnalysisResultScreenState
   Future<void> _loadCachedContent() async {
     final effectiveType = _getEffectiveDocumentType(); // USE USER'S CHOICE!
 
-    // Only load cache for dialogue, exercise, and grammar types
+    // Only load cache for dialogue, exercise, grammar, and PDF/mixed types
     if (widget.documentId == null ||
         (effectiveType != DocumentType.dialogue &&
             effectiveType != DocumentType.exercise &&
-            effectiveType != DocumentType.grammar)) {
+            effectiveType != DocumentType.grammar &&
+            effectiveType != DocumentType.mixed &&
+            effectiveType != DocumentType.professionalText)) {
       return;
     }
 
@@ -205,6 +207,10 @@ class _EnhancedAnalysisResultScreenState
         } else if (effectiveType == DocumentType.exercise) {
           content = cachedResult.exerciseSolution;
         } else if (effectiveType == DocumentType.grammar) {
+          content = cachedResult.grammarExplanation;
+        } else if (effectiveType == DocumentType.mixed ||
+            effectiveType == DocumentType.professionalText) {
+          // For PDF, use grammarExplanation field (TODO: add dedicated pdfMixedContent field)
           content = cachedResult.grammarExplanation;
         }
 
@@ -314,6 +320,66 @@ class _EnhancedAnalysisResultScreenState
               .last,
           imageDescriptions: imageDescs,
         );
+      } else if (effectiveType == DocumentType.mixed ||
+          effectiveType == DocumentType.professionalText) {
+        // PDF/Mixed: Process all sections in order
+        Map<String, dynamic> allSections = {};
+
+        for (var i = 0; i < widget.analysis.contentStructure.length; i++) {
+          final section = widget.analysis.contentStructure[i];
+
+          try {
+            Map<String, dynamic> sectionContent;
+
+            if (section.type.toLowerCase() == 'grammar') {
+              sectionContent = await _aiService
+                  .generateEnhancedGrammarExplanation(
+                    extractedText: section.sectionText.isEmpty
+                        ? widget
+                              .analysis
+                              .extractedText // Fallback to full text
+                        : section.sectionText,
+                    mainTopic: section.title,
+                    languageLevel: widget.analysis.languageLevel
+                        .toString()
+                        .split('.')
+                        .last,
+                  );
+            } else if (section.type.toLowerCase() == 'exercise') {
+              sectionContent = await _aiService.generateExerciseSolution(
+                extractedText: section.sectionText.isEmpty
+                    ? widget.analysis.extractedText
+                    : section.sectionText,
+                mainTopic: section.title,
+                languageLevel: widget.analysis.languageLevel
+                    .toString()
+                    .split('.')
+                    .last,
+              );
+            } else if (section.type.toLowerCase() == 'dialogue') {
+              sectionContent = await _aiService.generateDialogueActivity(
+                extractedText: section.sectionText.isEmpty
+                    ? widget.analysis.extractedText
+                    : section.sectionText,
+                mainTopic: section.title,
+                languageLevel: widget.analysis.languageLevel
+                    .toString()
+                    .split('.')
+                    .last,
+              );
+            } else {
+              // Default content for other types
+              sectionContent = {'content': section.description};
+            }
+
+            allSections['section_$i'] = sectionContent;
+          } catch (e) {
+            print('Error processing section $i: $e');
+            allSections['section_$i'] = {'error': 'Bu bölüm işlenemedi: $e'};
+          }
+        }
+
+        content = allSections;
       } else {
         throw Exception('Bu belge tipi için özel içerik oluşturulamaz');
       }
@@ -470,6 +536,50 @@ class _EnhancedAnalysisResultScreenState
                 )
               else
                 _buildSpecialContentCard(),
+              const SizedBox(height: 16),
+            ],
+
+            // PDF/Mixed content - multiple sections
+            if (effectiveType == DocumentType.mixed ||
+                effectiveType == DocumentType.professionalText) ...[
+              if (_specialContent == null)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isGeneratingSpecialContent
+                        ? null
+                        : _generateSpecialContent,
+                    icon: _isGeneratingSpecialContent
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.backgroundDark,
+                            ),
+                          )
+                        : Icon(Icons.auto_awesome),
+                    label: Text(
+                      _isGeneratingSpecialContent
+                          ? 'PDF İçeriği Hazırlanıyor...'
+                          : 'PDF İçeriğini Detaylı Analiz Et',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentBright,
+                      foregroundColor: AppColors.backgroundDark,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                _buildPDFMixedContent(),
               const SizedBox(height: 16),
             ],
 
@@ -1149,8 +1259,10 @@ class _EnhancedAnalysisResultScreenState
   Widget _buildSpecialContentCard() {
     if (_specialContent == null) return const SizedBox.shrink();
 
-    final isDialogue = widget.analysis.documentType == DocumentType.dialogue;
-    final isGrammar = widget.analysis.documentType == DocumentType.grammar;
+    // USE USER'S SELECTION!
+    final effectiveType = _getEffectiveDocumentType();
+    final isDialogue = effectiveType == DocumentType.dialogue;
+    final isGrammar = effectiveType == DocumentType.grammar;
 
     return Container(
       width: double.infinity,
@@ -2757,5 +2869,165 @@ class _EnhancedAnalysisResultScreenState
         ],
       ),
     );
+  }
+
+  /// Build PDF Mixed Content - shows all sections in PDF order
+  Widget _buildPDFMixedContent() {
+    if (_specialContent == null) return const SizedBox.shrink();
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Iterate through contentStructure in order (PDF page order)
+          ...widget.analysis.contentStructure.asMap().entries.map((entry) {
+            final index = entry.key;
+            final section = entry.value;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Section header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.info.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _getSectionIcon(section.type),
+                        color: AppColors.info,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              section.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            if (section.description.isNotEmpty)
+                              Text(
+                                section.description,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Section content based on type
+                if (_specialContent!['section_$index'] != null)
+                  _buildSectionContent(
+                    section.type,
+                    _specialContent!['section_$index'],
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Bu bölüm yükleniyor...',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 24),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  IconData _getSectionIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'grammar':
+        return Icons.psychology;
+      case 'exercise':
+        return Icons.lightbulb;
+      case 'dialogue':
+        return Icons.chat;
+      case 'vocabulary':
+        return Icons.book;
+      default:
+        return Icons.description;
+    }
+  }
+
+  Widget _buildSectionContent(String type, Map<String, dynamic> content) {
+    // Don't manipulate global _specialContent - use parameter directly
+
+    switch (type.toLowerCase()) {
+      case 'grammar':
+        // Temporarily swap content for rendering
+        final temp = _specialContent;
+        _specialContent = content;
+        final widget = _buildGrammarContent();
+        _specialContent = temp;
+        return widget;
+
+      case 'exercise':
+        final temp = _specialContent;
+        _specialContent = content;
+        final widget = _buildExerciseContent();
+        _specialContent = temp;
+        return widget;
+
+      case 'dialogue':
+        final temp = _specialContent;
+        _specialContent = content;
+        final widget = _buildDialogueContent();
+        _specialContent = temp;
+        return widget;
+
+      case 'vocabulary':
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundCard,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            content['content'] ?? 'Kelime listesi',
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
+        );
+
+      default:
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundCard,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            content['content'] ?? content.toString(),
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
+        );
+    }
   }
 }

@@ -228,17 +228,18 @@ $documentTypeSection
    [
      {
        "title": "Section title (e.g., 'Teil A', 'Wortschatz', 'Übung 1')",
-       "type": "section|heading|exercise|vocabulary|image|text",
-       "content": "Brief description of what this section contains (Turkish)",
+       "type": "section|heading|exercise|vocabulary|image|text|grammar|dialogue",
+       "description": "Brief summary of section (Turkish)",
+       "sectionText": "FULL TEXT of this section - all German text from this part",
        "page": 1 (if multi-page document)
      }
    ]
    
    Example for pdfGeneral/mixed:
    [
-     {"title": "Berufe", "type": "heading", "content": "Ana başlık - Meslekler", "page": 1},
-     {"title": "Bilder", "type": "image", "content": "3 meslek görseli (Doktor, Öğretmen, Bakıcı)", "page": 1},
-     {"title": "Sprechen Sie", "type": "exercise", "content": "Konuşma aktivitesi - Meslekler hakkında", "page": 1}
+     {"title": "Berufe", "type": "heading", "description": "Ana başlık", "sectionText": "", "page": 1},
+     {"title": "Verben mit Präpositionen", "type": "grammar", "description": "Edatlarla kullanılan fiiller", "sectionText": "warten auf + Akkusativ\\ndenken an + Akkusativ\\n...", "page": 1},
+     {"title": "Übung", "type": "exercise", "description": "Boşluk doldurma", "sectionText": "1. Ich warte ___ den Bus.\\n2. Er denkt ___ seine Familie.", "page": 2}
    ]
 
 Response format (ONLY JSON):
@@ -1522,7 +1523,8 @@ $extractedText
           '''
 IMPORTANT: You MUST respond with ONLY valid JSON. No explanations, no markdown, just pure JSON.
 
-Sen uzman bir Almanca öğretmenisin. Bu grameri HIZLI VE AKILDA KALICI şekilde öğret.
+Sen bir Almanca öğretmenisin. ÖĞRENCİNİZ KÜÇÜK YAŞTA VE ALMANCA BİLMİYOR. 
+Ona çok basit, sade bir dille belgede gördüğümüz Almanca konuları anlatacaksın.
 
 **BELGE:**
 """
@@ -1531,34 +1533,100 @@ $extractedText
 **KONU:** $mainTopic
 **SEVİYE:** $languageLevel
 
-**GÖREV:** Kısa, görsel, akılda kalıcı gramer anlatımı yap.
+**ÇOK ÖNEMLİ - DİL KULLANIMI:**
 
-**JSON YANIT:**
+⛔ **KULLANMA:**
+- "zamir", "zarf", "tümleç", "sıfat" gibi TEKNİK dilbilgisi terimleri
+- Profesör gibi karmaşık açıklamalar
+- Almanca bilmeyen biri anlamayacak kelimeler
+- **"ŞEYLER" KELİMESİ YASAK!** → Yerine: nesneler, eşyalar, yerler, kişiler, hayvanlar (spesifik ol!)
+
+✅ **KULLAN:**
+- BASİT, günlük Türkçe
+- Küçük bir çocuğa anlatır gibi
+- Örneklerle göster, terimle değil
+
+**ÖRNEK KÖTÜ:** "Bu bir zamir ve cümlenin tümlecidir"
+**ÖRNEK İYİ:** "Bu kelime kişi yerine kullanılır. 'Ben, sen, o' gibi"
+
+**ÖRNEK KÖTÜ:** "Edatlar şeyler için kullanılır"
+**ÖRNEK İYİ:** "Edatlar yerler, nesneler veya kişiler için kullanılır"
+
+📝 **ALMANCA YAZILACAKLAR:**
+- Gramer başlıkları (örn: "Präpositionen")
+- Kurallar (örn: "nach + Dativ")
+
+📝 **TÜRKÇE YAZILACAKLAR:**
+- Açıklamalar - ÇOK BASİT TÜRKÇE
+- "Ne zaman kullanılır" - günlük örneklerle
+- İpuçları - akılda kalacak şekilde
+
+**DİĞER TALİMATLAR:**
+1. Belgede birden fazla konu varsa HEPSİNİ anlat
+2. Her örnekle Türkçe çevirisi ver
+3. Çocuğa anlatır gibi basit dil - PROFESÖR DEĞİLSİN, ÖĞRETMEN İN!
+
+
+
+
+**JSON YANIT ÖRNEĞİ:**
 {
-  "grammarTopic": "Gramer konusu (kısa)",
-  "quickSummary": "Tek cümlede özet",
-  "teachingMethod": "Yöntem (tablo/şema/kalıp)",
-  "visualSchema": "Text-based şema (kısa, anlaşılır)",
+  "grammarTopic": "Präpositionen mit Dativ",
+  "quickSummary": "Bu belgede 'Dativ Edatları' konusu anlatılıyor. Hangi edatlardan sonra Dativ kullanılır öğreneceğiz.",
+  "visualSchema": "Dativ Edatları:\naus - von - zu - bei - mit - nach - seit",
   "coreRules": [
-    {"rule": "Kural", "explanation": "Türkçe açıklama", "pattern": "Örnek kalıp"}
+    {
+      "rule": "nach + Dativ",
+      "explanation": "Yön bildiren 'e/a' anlamında kullanılır. Şehirler ve ülkeler için.",
+      "pattern": "nach + [yer ismi - Dativ]",
+      "examples": [
+        "Ich fahre nach Berlin. = Berlin'e gidiyorum.",
+        "Er geht nach Hause. = Eve gidiyor.",
+        "Wir fliegen nach Deutschland. = Almanya'ya uçuyoruz."
+      ]
+    },
+    {
+      "rule": "mit + Dativ",
+      "explanation": "Birlikte veya araç bildirmek için kullanılır.",
+      "pattern": "mit + [isim - Dativ]",
+      "examples": [
+        "Ich fahre mit dem Bus. = Otobüsle gidiyorum.",
+        "Er kommt mit mir. = Benimle geliyor."
+      ]
+    }
   ],
   "examplePatterns": [
-    {"pattern": "Kalıp", "examples": ["Örnek 1", "Örnek 2"], "translation": "Türkçe"}
+    {
+      "pattern": "Ich gehe zu + [Dativ]",
+      "examples": [
+        "Ich gehe zum Arzt. = Doktora gidiyorum.",
+        "Wir gehen zur Schule. = Okula gidiyoruz."
+      ],
+      "note": "zu edatı Dativ alır ve zum=zu+dem, zur=zu+der şeklinde kısalır"
+    }
   ],
-  "comparisonTable": {
-    "title": "Başlık",
-    "headers": ["Sütun1", "Sütun2"],
-    "rows": [["Veri1", "Veri2"]]
-  },
   "commonMistakes": [
-    {"mistake": "❌ Yanlış", "why": "Neden", "correct": "✅ Doğru", "tip": "İpucu"}
+    {
+      "mistake": "Ich fahre nach der Schule.",
+      "correct": "Ich fahre zur Schule.",
+      "tip": "nach sadece şehir/ülke isimleri ile, okul gibi binalar için zu kullan"
+    }
   ],
-  "quickTips": ["💡 İpucu 1", "💡 İpucu 2"],
-  "practicePrompts": ["Pratik 1", "Pratik 2"],
-  "memoryTricks": ["🧠 Ezber tekniği 1"]
+  "quickTips": [
+    "zu kullanırken zum ve zur kısaltmalarını unutma",
+    "nach sonrası düz isim - artikel yok",
+    "mit her zaman Dativ alır - hiç Akkusativ almaz"
+  ],
+  "memoryTricks": [
+    "AUS-BEI-MIT-NACH-SEIT-VON-ZU harf sırası ile ezberle",
+    "zu yer isimleriyle, nach şehir/ülke isimleriyle"
+  ]
 }
 
-**ÖNEMLI:** KISA yaz, HIZLI cevap ver, TÜM açıklamalar TÜRKÇE!
+**ÇOK ÖNEMLİ:** 
+- Kurallar ve örnekler ALMANCA
+- Açıklamalar, ipuçları, ezber teknikleri TÜRKÇE
+- Her Almanca örnek = Türkçe çeviri şeklinde!
 ''';
 
       final response = await _textModel.generateContent(
